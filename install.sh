@@ -3,6 +3,7 @@ set -eu
 
 REPO_URL="${REPO_URL:-https://github.com/declankra/keep-computer-on-in-your-backpack.git}"
 WORK_DIR="${TMPDIR:-/tmp}/backpack-awake-install"
+SOURCE_DIR="${BACKPACK_AWAKE_SOURCE_DIR:-}"
 APP_NAME="Backpack Awake.app"
 APP_DIR="$HOME/Applications/$APP_NAME"
 STATE_DIR="$HOME/Library/Application Support/BackpackAwake"
@@ -19,12 +20,16 @@ need_command() {
   fi
 }
 
-need_command git
 need_command swiftc
 need_command codesign
 
-rm -rf "$WORK_DIR"
-git clone --depth 1 "$REPO_URL" "$WORK_DIR"
+if [[ -n "$SOURCE_DIR" ]]; then
+  WORK_DIR="$SOURCE_DIR"
+else
+  need_command git
+  rm -rf "$WORK_DIR"
+  git clone --depth 1 "$REPO_URL" "$WORK_DIR"
+fi
 
 mkdir -p "$APP_DIR/Contents/MacOS" "$HOME/Applications" "$STATE_DIR" "$HOME/Library/LaunchAgents"
 
@@ -57,13 +62,17 @@ cat > "$LOGIN_AGENT" <<PLIST
 </plist>
 PLIST
 
-echo "Installing the privileged controller. macOS may ask for your password once."
-sudo mkdir -p "$CONTROLLER_DIR" "$LOG_DIR"
-sudo install -o root -g wheel -m 755 "$WORK_DIR/scripts/backpack-awake-controller" "$CONTROLLER_PATH"
-sudo install -o root -g wheel -m 644 "$WORK_DIR/scripts/com.declankramper.backpack-awake-controller.plist" "$CONTROLLER_PLIST"
-sudo launchctl bootout system "$CONTROLLER_PLIST" 2>/dev/null || true
-sudo launchctl bootstrap system "$CONTROLLER_PLIST"
-sudo launchctl kickstart -k system/com.declankramper.backpack-awake-controller
+if [[ "${BACKPACK_AWAKE_SKIP_PRIVILEGED:-0}" != "1" ]]; then
+  echo "Installing the privileged controller. macOS may ask for your password once."
+  sudo mkdir -p "$CONTROLLER_DIR" "$LOG_DIR"
+  sudo install -o root -g wheel -m 755 "$WORK_DIR/scripts/backpack-awake-controller" "$CONTROLLER_PATH"
+  sudo install -o root -g wheel -m 644 "$WORK_DIR/scripts/com.declankramper.backpack-awake-controller.plist" "$CONTROLLER_PLIST"
+  sudo launchctl bootout system "$CONTROLLER_PLIST" 2>/dev/null || true
+  sudo launchctl bootstrap system "$CONTROLLER_PLIST"
+  sudo launchctl kickstart -k system/com.declankramper.backpack-awake-controller
+else
+  echo "Skipping privileged controller install."
+fi
 
 if [[ "${BACKPACK_AWAKE_SKIP_LAUNCH:-0}" != "1" ]]; then
   launchctl bootout "gui/$(id -u)" "$LOGIN_AGENT" 2>/dev/null || true

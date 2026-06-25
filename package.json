@@ -1,0 +1,34 @@
+{
+  "name": "keep-computer-on-in-your-backpack",
+  "version": "0.1.0",
+  "description": "A macOS menu bar app that keeps your laptop awake with the lid closed while letting the screen turn off.",
+  "bin": {
+    "keep-computer-on-in-your-backpack": "bin/install.mjs"
+  },
+  "files": [
+    "bin",
+    "install.sh",
+    "Info.plist",
+    "Sources",
+    "scripts"
+  ],
+  "os": [
+    "darwin"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "test": "node --check bin/install.mjs && zsh -n install.sh && zsh -n scripts/backpack-awake-controller && plutil -lint Info.plist scripts/com.declankramper.backpack-awake-controller.plist",
+    "pack:check": "npm pack --dry-run"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/declankra/keep-computer-on-in-your-backpack.git"
+  },
+  "homepage": "https://github.com/declankra/keep-computer-on-in-your-backpack#readme",
+  "bugs": {
+    "url": "https://github.com/declankra/keep-computer-on-in-your-backpack/issues"
+  },
+  "license": "MIT"
+}

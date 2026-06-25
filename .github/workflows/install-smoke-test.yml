@@ -14,6 +14,8 @@ jobs:
 
       - name: Validate source files
         run: |
+          npm test
+          npm run pack:check
           zsh -n install.sh
           zsh -n scripts/backpack-awake-controller
           plutil -lint Info.plist scripts/com.declankramper.backpack-awake-controller.plist
@@ -32,3 +34,11 @@ jobs:
           sudo test -d /Library/Logs/BackpackAwake
           sudo test -f /Library/LaunchDaemons/com.declankramper.backpack-awake-controller.plist
           sudo launchctl print system/com.declankramper.backpack-awake-controller
+
+      - name: Verify npm package installer
+        run: |
+          npm pack
+          rm -rf "$HOME/Applications/Backpack Awake.app"
+          BACKPACK_AWAKE_SKIP_LAUNCH=1 npx --yes ./keep-computer-on-in-your-backpack-0.1.0.tgz
+          test -x "$HOME/Applications/Backpack Awake.app/Contents/MacOS/BackpackAwakeMenu"
+          codesign --verify --deep --strict "$HOME/Applications/Backpack Awake.app"
