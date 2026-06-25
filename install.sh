@@ -54,6 +54,7 @@ cat > "$LOGIN_AGENT" <<PLIST
 PLIST
 
 echo "Installing the privileged controller. macOS may ask for your password once."
+sudo mkdir -p /usr/local/sbin
 sudo install -o root -g wheel -m 755 "$WORK_DIR/scripts/backpack-awake-controller" /usr/local/sbin/backpack-awake-controller
 sudo install -o root -g wheel -m 644 "$WORK_DIR/scripts/com.declankramper.backpack-awake-controller.plist" /Library/LaunchDaemons/com.declankramper.backpack-awake-controller.plist
 sudo launchctl bootout system /Library/LaunchDaemons/com.declankramper.backpack-awake-controller.plist 2>/dev/null || true
