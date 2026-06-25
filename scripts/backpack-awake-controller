@@ -1,0 +1,88 @@
+#!/bin/zsh
+set -eu
+
+PATH=/usr/bin:/bin:/usr/sbin:/sbin
+
+LOG_FILE=/var/log/backpack-awake-controller.log
+
+log() {
+  printf '%s %s\n' "$(/bin/date '+%Y-%m-%d %H:%M:%S')" "$*" >> "$LOG_FILE"
+}
+
+console_user() {
+  /usr/sbin/scutil <<< "show State:/Users/ConsoleUser" \
+    | /usr/bin/awk '/Name :/ { print $3; exit }'
+}
+
+console_home() {
+  local user="$1"
+  /usr/bin/dscl . -read "/Users/$user" NFSHomeDirectory 2>/dev/null \
+    | /usr/bin/awk '{ print $2; exit }'
+}
+
+state_paths() {
+  local user home
+  user="$(console_user)"
+  if [[ -z "$user" || "$user" == "loginwindow" ]]; then
+    return 1
+  fi
+
+  home="$(console_home "$user")"
+  if [[ -z "$home" || ! -d "$home" ]]; then
+    return 1
+  fi
+
+  STATE_DIR="$home/Library/Application Support/BackpackAwake"
+  STATE_FILE="$STATE_DIR/state"
+  PID_FILE="$STATE_DIR/caffeinate.pid"
+}
+
+sleep_disabled() {
+  /usr/bin/pmset -g | /usr/bin/grep -q 'SleepDisabled[[:space:]]*1'
+}
+
+desired_state() {
+  if [[ -f "$STATE_FILE" ]]; then
+    /bin/cat "$STATE_FILE" 2>/dev/null | /usr/bin/tr -d '[:space:]'
+  else
+    echo "off"
+  fi
+}
+
+kill_recorded_caffeinate() {
+  [[ -f "$PID_FILE" ]] || return 0
+  local pid
+  pid="$(/bin/cat "$PID_FILE" 2>/dev/null || true)"
+  [[ -n "$pid" ]] || return 0
+
+  if /bin/ps -p "$pid" -o comm= 2>/dev/null | /usr/bin/grep -q '^caffeinate$'; then
+    /bin/kill "$pid" 2>/dev/null || true
+    log "killed recorded caffeinate pid $pid"
+  fi
+  /bin/rm -f "$PID_FILE"
+}
+
+apply_once() {
+  state_paths || return 0
+
+  case "$(desired_state)" in
+    on)
+      if ! sleep_disabled; then
+        /usr/bin/pmset -a disablesleep 1
+        log "enabled SleepDisabled"
+      fi
+      ;;
+    *)
+      kill_recorded_caffeinate
+      if sleep_disabled; then
+        /usr/bin/pmset -a disablesleep 0
+        log "disabled SleepDisabled"
+      fi
+      ;;
+  esac
+}
+
+while true; do
+  apply_once
+  /bin/sleep 2
+done
