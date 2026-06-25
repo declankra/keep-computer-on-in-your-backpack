@@ -3,7 +3,7 @@ set -eu
 
 PATH=/usr/bin:/bin:/usr/sbin:/sbin
 
-LOG_FILE=/var/log/backpack-awake-controller.log
+LOG_FILE=/Library/Logs/BackpackAwake/controller.log
 
 log() {
   printf '%s %s\n' "$(/bin/date '+%Y-%m-%d %H:%M:%S')" "$*" >> "$LOG_FILE"

@@ -28,6 +28,7 @@ jobs:
           test -x "$HOME/Applications/Backpack Awake.app/Contents/MacOS/BackpackAwakeMenu"
           codesign --verify --deep --strict "$HOME/Applications/Backpack Awake.app"
           test -f "$HOME/Library/LaunchAgents/com.declankramper.backpack-awake-menu.plist"
-          sudo test -x /usr/local/sbin/backpack-awake-controller
+          sudo test -x "/Library/Application Support/BackpackAwake/backpack-awake-controller"
+          sudo test -d /Library/Logs/BackpackAwake
           sudo test -f /Library/LaunchDaemons/com.declankramper.backpack-awake-controller.plist
           sudo launchctl print system/com.declankramper.backpack-awake-controller

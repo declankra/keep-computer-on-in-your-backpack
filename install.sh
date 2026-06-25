@@ -7,6 +7,10 @@ APP_NAME="Backpack Awake.app"
 APP_DIR="$HOME/Applications/$APP_NAME"
 STATE_DIR="$HOME/Library/Application Support/BackpackAwake"
 LOGIN_AGENT="$HOME/Library/LaunchAgents/com.declankramper.backpack-awake-menu.plist"
+CONTROLLER_DIR="/Library/Application Support/BackpackAwake"
+CONTROLLER_PATH="$CONTROLLER_DIR/backpack-awake-controller"
+CONTROLLER_PLIST="/Library/LaunchDaemons/com.declankramper.backpack-awake-controller.plist"
+LOG_DIR="/Library/Logs/BackpackAwake"
 
 need_command() {
   if ! command -v "$1" >/dev/null 2>&1; then
@@ -54,11 +58,11 @@ cat > "$LOGIN_AGENT" <<PLIST
 PLIST
 
 echo "Installing the privileged controller. macOS may ask for your password once."
-sudo mkdir -p /usr/local/sbin
-sudo install -o root -g wheel -m 755 "$WORK_DIR/scripts/backpack-awake-controller" /usr/local/sbin/backpack-awake-controller
-sudo install -o root -g wheel -m 644 "$WORK_DIR/scripts/com.declankramper.backpack-awake-controller.plist" /Library/LaunchDaemons/com.declankramper.backpack-awake-controller.plist
-sudo launchctl bootout system /Library/LaunchDaemons/com.declankramper.backpack-awake-controller.plist 2>/dev/null || true
-sudo launchctl bootstrap system /Library/LaunchDaemons/com.declankramper.backpack-awake-controller.plist
+sudo mkdir -p "$CONTROLLER_DIR" "$LOG_DIR"
+sudo install -o root -g wheel -m 755 "$WORK_DIR/scripts/backpack-awake-controller" "$CONTROLLER_PATH"
+sudo install -o root -g wheel -m 644 "$WORK_DIR/scripts/com.declankramper.backpack-awake-controller.plist" "$CONTROLLER_PLIST"
+sudo launchctl bootout system "$CONTROLLER_PLIST" 2>/dev/null || true
+sudo launchctl bootstrap system "$CONTROLLER_PLIST"
 sudo launchctl kickstart -k system/com.declankramper.backpack-awake-controller
 
 if [[ "${BACKPACK_AWAKE_SKIP_LAUNCH:-0}" != "1" ]]; then

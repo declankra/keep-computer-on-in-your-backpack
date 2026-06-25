@@ -8,7 +8,7 @@
 
   <key>ProgramArguments</key>
   <array>
-    <string>/usr/local/sbin/backpack-awake-controller</string>
+    <string>/Library/Application Support/BackpackAwake/backpack-awake-controller</string>
   </array>
 
   <key>RunAtLoad</key>
@@ -18,9 +18,9 @@
   <true/>
 
   <key>StandardOutPath</key>
-  <string>/var/log/backpack-awake-controller.out</string>
+  <string>/Library/Logs/BackpackAwake/controller.out</string>
 
   <key>StandardErrorPath</key>
-  <string>/var/log/backpack-awake-controller.err</string>
+  <string>/Library/Logs/BackpackAwake/controller.err</string>
 </dict>
 </plist>
