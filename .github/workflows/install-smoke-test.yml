@@ -1,0 +1,33 @@
+name: Install Smoke Test
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  install:
+    runs-on: macos-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Validate source files
+        run: |
+          zsh -n install.sh
+          zsh -n scripts/backpack-awake-controller
+          plutil -lint Info.plist scripts/com.declankramper.backpack-awake-controller.plist
+          swiftc Sources/main.swift -framework AppKit -o /tmp/BackpackAwakeMenu
+
+      - name: Run installer
+        run: |
+          BACKPACK_AWAKE_SKIP_LAUNCH=1 REPO_URL="$GITHUB_WORKSPACE" ./install.sh
+
+      - name: Verify installed artifacts
+        run: |
+          test -x "$HOME/Applications/Backpack Awake.app/Contents/MacOS/BackpackAwakeMenu"
+          codesign --verify --deep --strict "$HOME/Applications/Backpack Awake.app"
+          test -f "$HOME/Library/LaunchAgents/com.declankramper.backpack-awake-menu.plist"
+          sudo test -x /usr/local/sbin/backpack-awake-controller
+          sudo test -f /Library/LaunchDaemons/com.declankramper.backpack-awake-controller.plist
+          sudo launchctl print system/com.declankramper.backpack-awake-controller

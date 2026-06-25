@@ -60,9 +60,11 @@ sudo launchctl bootout system /Library/LaunchDaemons/com.declankramper.backpack-
 sudo launchctl bootstrap system /Library/LaunchDaemons/com.declankramper.backpack-awake-controller.plist
 sudo launchctl kickstart -k system/com.declankramper.backpack-awake-controller
 
-launchctl bootout "gui/$(id -u)" "$LOGIN_AGENT" 2>/dev/null || true
-launchctl bootstrap "gui/$(id -u)" "$LOGIN_AGENT"
-launchctl kickstart -k "gui/$(id -u)/com.declankramper.backpack-awake-menu"
-open "$APP_DIR"
+if [[ "${BACKPACK_AWAKE_SKIP_LAUNCH:-0}" != "1" ]]; then
+  launchctl bootout "gui/$(id -u)" "$LOGIN_AGENT" 2>/dev/null || true
+  launchctl bootstrap "gui/$(id -u)" "$LOGIN_AGENT"
+  launchctl kickstart -k "gui/$(id -u)/com.declankramper.backpack-awake-menu"
+  open "$APP_DIR"
+fi
 
 echo "Installed. Look for the backpack icon in your menu bar."
